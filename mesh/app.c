@@ -62,7 +62,7 @@
 #if (HCI_ACCESS==HCI_USE_UART)
 #include "proj/drivers/uart.h"
 #endif
-
+#include "vendor/user_app/user_app.h"
 #if DU_ENABLE
 #include "vendor/common/user_du.h"
 #include "vendor/common/mi_api/telink_sdk_mible_api.h"
@@ -754,6 +754,9 @@ void User_Ctr_LED_Function(void)
 
 
 }
+
+
+
 void cb_My_Main_Loop_function(void)
 {
 	//MAC,Dirve name.etc
@@ -766,7 +769,15 @@ void cb_My_Main_Loop_function(void)
 	cb_User_SW_Function();
 	
 	//Control LED
+if(Current_SW2812B_STATE != 0)
+{
+	SW2812B_Supply_Enable();
 	User_Ctr_LED_Function();
+}
+else
+{
+    SW2812B_Supply_Disable();
+}
 
 	
 }

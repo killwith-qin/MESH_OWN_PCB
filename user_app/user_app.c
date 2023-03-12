@@ -46,6 +46,7 @@
 #include "vendor/common/mesh_config.h"
 #include "vendor/common/directed_forwarding.h"
 #include "vendor/common/certify_base/certify_base_crypto.h"
+#include "vendor/user_app/user_app.h"
 
 #if(__TL_LIB_8258__ || (MCU_CORE_TYPE == MCU_CORE_8258))
 #include "stack/ble/ble.h"
@@ -70,5 +71,19 @@ void cb_user_factory_reset_additional()
 void cb_user_proc_led_onoff_driver(int on)
 {
     // TODO
+}
+
+
+U8  Last_SW2812B_STATE = 0x00;
+U8  Current_SW2812B_STATE = 0x00;
+
+void SW2812B_Supply_Enable(void)
+{
+    gpio_write(SW2812B_PWR_ENABLE, true);
+}
+
+void SW2812B_Supply_Disable(void)
+{
+    gpio_write(SW2812B_PWR_ENABLE, false);
 }
 

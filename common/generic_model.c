@@ -50,6 +50,8 @@
 #include "subnet_bridge.h"
 #include "op_agg_model.h"
 #include "solicitation_rpl_cfg_model.h"
+#include "vendor/user_app/user_app.h"
+
 /** @addtogroup Mesh_Common
   * @{
   */
@@ -255,6 +257,10 @@ int mesh_cmd_sig_g_onoff_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 	if(err){
 		return err;
 	}
+    else
+    {
+        Current_SW2812B_STATE = p_set->onoff;
+    }
 	
 	if(cb_par->op_rsp != STATUS_NONE){
 		err = mesh_g_onoff_st_rsp(cb_par);

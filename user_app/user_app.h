@@ -45,7 +45,11 @@
 void cb_user_factory_reset_additional();
 void cb_user_proc_led_onoff_driver(int on);
 
+void SW2812B_Supply_Enable(void);
+void SW2812B_Supply_Disable(void);
 
+extern u8  Last_SW2812B_STATE;
+extern u8  Current_SW2812B_STATE;
 
 /**
   * @}
