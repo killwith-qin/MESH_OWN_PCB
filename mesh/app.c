@@ -111,6 +111,87 @@ int soft_timer_test0(void)
 	return 0;
 }
 #endif
+
+/*Qin Wei function*/
+#define LED_SIGAL_SEND_PIN    (GPIO_PD4)        //register GPIO output
+#define SIGNAL_IO_REG_ADDR    (0x583+((LED_SIGAL_SEND_PIN>>8)<<3)) //register GPIO output
+
+
+#define SINGAL_OUT_LOW      ( write_reg8 (read_reg8(SIGNAL_IO_REG_ADDR) & ( ~(LED_SIGAL_SEND_PIN & 0xff)  ) ) )
+
+#define SINGAL_OUT_HIGH     ( write_reg8 (read_reg8(SIGNAL_IO_REG_ADDR) | ( LED_SIGAL_SEND_PIN & 0xff)) )
+
+
+
+/* Put it into a function independently, to prevent the compiler from 
+ * optimizing different pins, resulting in inaccurate baud rates.
+ */
+_attribute_ram_code_ 
+_attribute_no_inline_ 
+static void Sned_24bit_Signal(u8 *bit)
+{
+	int j;
+        u8 tmp_out_low  = read_reg8(SIGNAL_IO_REG_ADDR) & (~(LED_SIGAL_SEND_PIN & 0xff));
+	    u8 tmp_out_high = read_reg8(SIGNAL_IO_REG_ADDR) | (LED_SIGAL_SEND_PIN & 0xff);
+	/*! Make sure the following loop instruction starts at 4-byte alignment: (which is destination address of "tjne") */
+	// _ASM_NOP_; 
+	for(j = 0;j<24;j++) 
+	{
+		 if(bit[j]!=0)
+		 {
+            write_reg8(SIGNAL_IO_REG_ADDR,tmp_out_high);
+			CLOCK_DLY_10_CYC;CLOCK_DLY_10_CYC;
+			CLOCK_DLY_8_CYC;CLOCK_DLY_8_CYC;
+            write_reg8(SIGNAL_IO_REG_ADDR,tmp_out_low);
+			CLOCK_DLY_8_CYC;CLOCK_DLY_8_CYC;
+		 }
+		 else
+		 {
+            write_reg8(SIGNAL_IO_REG_ADDR,tmp_out_high);
+            CLOCK_DLY_8_CYC;CLOCK_DLY_8_CYC;
+			write_reg8(SIGNAL_IO_REG_ADDR,tmp_out_low);
+			CLOCK_DLY_10_CYC;CLOCK_DLY_10_CYC;
+			CLOCK_DLY_8_CYC;CLOCK_DLY_8_CYC;
+		 }
+	}
+}
+
+
+_attribute_ram_code_ static void Send_Reset_Signal(void)
+{
+
+        u8 tmp_out_low  = read_reg8(SIGNAL_IO_REG_ADDR) & (~(LED_SIGAL_SEND_PIN & 0xff));
+	    
+        write_reg8(SIGNAL_IO_REG_ADDR,tmp_out_low);
+		sleep_us(50);
+}
+
+
+/**
+ * @brief  Send a byte of serial data.
+ * @param  byte: Data to send.
+ * @retval None
+ */
+_attribute_ram_code_ static void Send_One_Ctr_Signal(u32 One_Signal)   //0x00 XX XX XX 24bit valid
+{
+	int i;
+	//volatile u32 pcTxReg = SIGNAL_IO_REG_ADDR;//register GPIO output
+	u8 bit[24] = {0};
+	
+	for(i=0;i<24;i++)
+	{
+        bit[i] = ( (One_Signal>>i) & 0x01)? 0x01 : 0x00;
+	}
+	
+	/*! Minimize the time for interrupts to close and ensure timely 
+	    response after interrupts occur. */
+	u8 r = 0;
+	r = irq_disable();
+	    Sned_24bit_Signal(bit);
+	irq_restore(r);
+	 
+}
+
 #if MI_SWITCH_LPN_EN
 void mi_mesh_switch_sys_mode(u32 clk)
 {
@@ -442,59 +523,76 @@ void test_simu_io_user_define_proc()
 
 
 #define RUNNING_REPORT_TIME    (5000 * 1000)  //2000MS
-//#define LED_YELLOW_FLASH_TIME  (500 * 1000)  //500MS
+#define LED_YELLOW_FLASH_TIME  (500 * 1000)  //500MS
 
 void User_General_Running_Function(void)
 {
 	static u32 Running_Report_Start_Tick = 0;
-	//static u32 Led_Yellow_Flash_Start_Tick = 0;
+	static u32 Led_Yellow_Flash_Start_Tick = 0;
 	if( clock_time_exceed(Running_Report_Start_Tick, RUNNING_REPORT_TIME))
 	{
 		Running_Report_Start_Tick = clock_time();
 		LOG_USER_MSG_INFO(0, 0, "Program is Running!", 0);
 	}
-	/*
 	if( clock_time_exceed(Led_Yellow_Flash_Start_Tick, LED_YELLOW_FLASH_TIME))
 	{
 		Led_Yellow_Flash_Start_Tick = clock_time();
-		
+		gpio_toggle(PCB_STAT_LED);
 	}
-	*/
 }
 
 unsigned char Printf_Buf_QW[6] = {0x65,0x66,0x67,0x68,0x69,0x70};
 
 
+#define SW1_GPIO_ADDR    (0x580+((SW1_GPIO>>8)<<3)) //register GPIO input
+#define SW2_GPIO_ADDR    (0x580+((SW2_GPIO>>8)<<3)) //register GPIO input
+#define SW3_GPIO_ADDR    (0x580+((SW3_GPIO>>8)<<3)) //register GPIO input
+
 void cb_User_SW_Function(void)
 {
 	static u8 SW1_Last_State = 0;
-	static u8 SW2_Last_State = 0; 
+	static u8 SW2_Last_State = 0;
+	static u8 SW3_Last_State = 0; 
 	u8 SW1_Current_State=0;
 	u8 SW2_Current_State=0;
-	SW1_Current_State = gpio_read(SW1_GPIO);
-	SW2_Current_State = gpio_read(SW2_GPIO);
+	u8 SW3_Current_State=0;
+	SW1_Current_State = ( read_reg8(SW1_GPIO_ADDR) & (SW1_GPIO & 0xFF) ); //gpio_read(SW1_GPIO);
+	SW2_Current_State = ( read_reg8(SW2_GPIO_ADDR) & (SW2_GPIO & 0xFF) );
+    SW3_Current_State = ( read_reg8(SW3_GPIO_ADDR) & (SW3_GPIO & 0xFF) );
 	if(SW1_Current_State != SW1_Last_State)
 	{
 		SW1_Last_State = SW1_Current_State;
-		if( (SW1_Current_State & BIT(2)) != 0)
+		if( SW1_Current_State != 0)
 		{
-			LOG_USER_MSG_INFO(&SW1_Current_State, 1, "SW2 CLOSE State: ", 0);
+			LOG_USER_MSG_INFO(&SW1_Current_State, 1, "SW1 CLOSE State: ", 0);
 		}
 		else
 		{
-			LOG_USER_MSG_INFO(&SW1_Current_State, 1, "SW2 OPEN State: ", 0);
+			LOG_USER_MSG_INFO(&SW1_Current_State, 1, "SW1 Pressed State: ", 0);
 		}
 	}
 	if(SW2_Current_State != SW2_Last_State)
 	{
 		SW2_Last_State = SW2_Current_State;
-		if( (SW2_Current_State & BIT(3)) != 0)
+		if( SW2_Current_State != 0)
 		{
-			LOG_USER_MSG_INFO(&SW2_Current_State, 1, "SW4 CLOSE State: ", 0);
+			LOG_USER_MSG_INFO(&SW2_Current_State, 1, "SW1 CLOSE State: ", 0);
 		}
 		else
 		{
-			LOG_USER_MSG_INFO(&SW2_Current_State, 1, "SW4 OPEN State: ", 0);
+			LOG_USER_MSG_INFO(&SW2_Current_State, 1, "SW2 Pressed State: ", 0);
+		}
+	}
+	if(SW3_Current_State != SW3_Last_State)
+	{
+		SW3_Last_State = SW3_Current_State;
+		if( SW3_Current_State != 0)
+		{
+			LOG_USER_MSG_INFO(&SW3_Current_State, 1, "SW3 CLOSE State: ", 0);
+		}
+		else
+		{
+			LOG_USER_MSG_INFO(&SW3_Current_State, 1, "SW3 Pressed State: ", 0);
 		}
 	}
 }
@@ -520,6 +618,142 @@ void cb_User_Init_Hardware(void)
 	}
 
 }
+/*
+		RED: #00FF00
+		ORAGE: #7DFF00
+		YELLOW: #FFFF00
+		GREEN: #FF0000
+		CYAN: #FF00FF
+		BULU: #0000FF
+		PURPLE: #00FFFF
+*/
+
+
+typedef enum RGB_Color
+{
+	RED    = 0x0000FF00,
+	ORAGE  = 0x007DFF00,
+	YELLOW = 0x00FFFF00,
+    GREEN  = 0x00FF0000,
+    CYAN   = 0x00FF00FF,
+    BULU   = 0x000000FF,
+    PURPLE = 0x0000FFFF,
+    DROWN  = 0x00000000
+}Seven_Color;
+
+U32 Ctr_Signal_Array[8] ={RED,ORAGE,YELLOW,GREEN,CYAN,BULU,PURPLE,DROWN};
+
+/*
+enum Switch_Color_index
+{
+	Color_INDEX_0,
+	Color_INDEX_1,
+	Color_INDEX_2,
+	Color_INDEX_3,
+	Color_INDEX_4,
+	Color_INDEX_5,
+	Color_INDEX_6,
+	Color_INDEX_7,
+	Color_INDEX_8,
+	Color_INDEX_9,
+	Color_INDEX_10,
+	Color_INDEX_11,
+	Color_INDEX_12,
+	Color_INDEX_MAX
+};
+*/
+
+#define EVERY_SEND_COUNT 30
+
+void User_Ctr_LED_Function(void)
+{
+	static u32 User_Send_LED_Signal_Tick = 0;
+	static U32 Color_Count = 0;
+	int j;
+	U8 switch_Led_light;
+
+
+		//gpio_toggle(GPIO_PB5);
+		//gpio_write(GPIO_PB5,1);
+    if( clock_time_exceed(User_Send_LED_Signal_Tick, 100*1000))
+	{
+		User_Send_LED_Signal_Tick = clock_time();
+		Color_Count++;
+		switch_Led_light = Color_Count%30;
+
+			for(j=0;j<EVERY_SEND_COUNT;j++)
+			{
+				if(j==switch_Led_light)
+				{
+					Send_One_Ctr_Signal(RED);
+					Send_One_Ctr_Signal(YELLOW);
+					Send_One_Ctr_Signal(BULU);
+					Send_One_Ctr_Signal(CYAN);
+					Send_One_Ctr_Signal(PURPLE);
+					Send_One_Ctr_Signal(ORAGE);
+					Send_One_Ctr_Signal(GREEN);
+				}
+				else
+				{
+					Send_One_Ctr_Signal(DROWN);
+				}
+				
+			}
+
+		/*
+		switch(switch_Led_light)
+	    {
+			case 0:
+				for(i=0;i<EVERY_SEND_COUNT;i++)
+				{
+
+
+				}
+			break;
+			case 1:
+				for(i=0;i<EVERY_SEND_COUNT;i++)
+                {
+					Send_One_Ctr_Signal(Ctr_Signal_Double_Array[1][i]);
+				}
+			break;
+			case 2:
+				for(i=0;i<EVERY_SEND_COUNT;i++)
+                {
+					Send_One_Ctr_Signal(Ctr_Signal_Double_Array[2][i]);
+                }
+            break;
+            case 3:
+            	for(i=0;i<EVERY_SEND_COUNT;i++)
+            	{
+            		Send_One_Ctr_Signal(Ctr_Signal_Double_Array[3][i]);
+            	}
+			break;
+			case 4:
+				for(i=0;i<EVERY_SEND_COUNT;i++)
+			    {
+					Send_One_Ctr_Signal(Ctr_Signal_Double_Array[4][i]);
+			    }
+			break;
+			case 5:
+				for(i=0;i<EVERY_SEND_COUNT;i++)
+				{
+					Send_One_Ctr_Signal(Ctr_Signal_Double_Array[5][i]);
+				}
+			break;
+			case 6:
+				for(i=0;i<EVERY_SEND_COUNT;i++)
+                {
+					Send_One_Ctr_Signal(Ctr_Signal_Double_Array[6][i]);
+			    }
+			break;
+	    }
+*/
+
+	    //gpio_toggle(GPIO_PB5);
+	}
+
+
+}
 void cb_My_Main_Loop_function(void)
 {
 	//MAC,Dirve name.etc
@@ -530,6 +764,10 @@ void cb_My_Main_Loop_function(void)
 	User_General_Running_Function();
 	//indicate SW Pressed
 	cb_User_SW_Function();
+	
+	//Control LED
+	User_Ctr_LED_Function();
+
 	
 }
 

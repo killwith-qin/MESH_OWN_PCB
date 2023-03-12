@@ -3601,7 +3601,7 @@ _PRINT_FUN_RAMCODE_ int LogMsgModuleDlg_and_buf(u8 *pbuf,int len,char *log_str,c
     #if (0 == HCI_LOG_FW_EN)
     return 1;
     #else
-        #if 0
+        #if 1
     return LogMsgModule_io_simu(pbuf,len,log_str,format,list);
         #else
     return LogMsgModdule_uart_mode(pbuf,len,log_str,format,list);

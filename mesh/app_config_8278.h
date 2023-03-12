@@ -78,18 +78,18 @@ extern "C" {
 #if WIN32
 #define HCI_ACCESS		HCI_USE_USB
 #else
-//#define HCI_ACCESS		HCI_USE_NONE
-#define HCI_ACCESS			HCI_USE_UART
+#define HCI_ACCESS		    HCI_USE_NONE
+//#define HCI_ACCESS			HCI_USE_UART
 #endif 
 
 #if (HCI_ACCESS==HCI_USE_UART)
-#define UART_TX_PIN		UART_TX_PB1
-#define UART_RX_PIN		UART_RX_PB0
+#define UART_TX_PIN		UART_TX_PD3
+#define UART_RX_PIN		UART_RX_PD6
 #endif
 
 #define HCI_LOG_FW_EN   1
 #if HCI_LOG_FW_EN
-#define DEBUG_INFO_TX_PIN           		GPIO_PB2
+#define DEBUG_INFO_TX_PIN           		GPIO_PB0
 #define PRINT_DEBUG_INFO                    1
 #endif
 
@@ -175,14 +175,17 @@ extern "C" {
 #define	SW1_GPIO				GPIO_PD6
 #define	SW2_GPIO				GPIO_PD5
 #elif(PCBA_SEL == PCBA_8278_C1T197A30_V1_0)
-#define PULL_WAKEUP_SRC_PB2     PM_PIN_PULLUP_1M	//btn
-#define PULL_WAKEUP_SRC_PB3     PM_PIN_PULLUP_1M	//btn
-#define PB2_INPUT_ENABLE		1
-#define PB3_INPUT_ENABLE		1
-#define	SW1_GPIO				GPIO_PB2            // SW2 in board
-#define	SW2_GPIO				GPIO_PB3            // SW4 in board
+#define PULL_WAKEUP_SRC_PC0     PM_PIN_PULLUP_1M	    //btn
+#define PULL_WAKEUP_SRC_PC2     PM_PIN_PULLUP_1M	    //btn
+#define PULL_WAKEUP_SRC_PC3     PM_PIN_PULLUP_1M	    //btn
+#define PC0_INPUT_ENABLE		1
+#define PC2_INPUT_ENABLE		1
+#define PC3_INPUT_ENABLE		1
+#define	SW1_GPIO				GPIO_PC0
+#define	SW2_GPIO				GPIO_PC2
+#define	SW3_GPIO                GPIO_PC3
 
-#if 1 // must output 0, because it is keyboard array. pull down is not enough to output low level.
+#if 0 // must output 0, because it is keyboard array. pull down is not enough to output low level.
 #define PB4_FUNC                AS_GPIO
 #define PB4_OUTPUT_ENABLE       1
 #define PB4_DATA_OUT            0
@@ -199,10 +202,10 @@ extern "C" {
 #define PWM_B       GPIO_PWM3B0		//blue
 #define PWM_W       GPIO_PWM4B1		//white
 #elif(PCBA_SEL == PCBA_8278_C1T197A30_V1_0)   // PCBA_8258_DEVELOPMENT_BOARD
-#define PWM_R       GPIO_PWM1ND3	//red
-#define PWM_G       GPIO_PWM2ND4	//green
+#define PWM_R       GPIO_PWM4B4	    //red
+#define PWM_G       GPIO_PWM5B5	    //green
 #define PWM_B       GPIO_PD5		//blue
-#define PWM_W       GPIO_PWM3D2		//white
+#define PWM_W       GPIO_PWM0NA0    //white
 #endif
 
 #define PWM_FUNC_R  AS_PWM  // AS_PWM_SECOND
@@ -222,6 +225,22 @@ extern "C" {
 
 #define GPIO_LED	PWM_R
 
+//FOR SW2812B
+
+#define SW2812B_PWR_ENABLE  GPIO_PA3
+#define PA3_OUTPUT_ENABLE   1
+#define PA3_DATA_OUT        1
+
+#define SW2812B_DIN         GPIO_PD4
+#define PD4_OUTPUT_ENABLE   1
+#define PD4_DATA_OUT        1
+
+
+#define   PCB_STAT_LED           GPIO_PA2
+#define   PA2_OUTPUT_ENABLE  1
+#define   PD2_DATA_OUT       1
+
+
 
 /////////////open SWS digital pullup to prevent MCU err, this is must ////////////
 #define PA7_DATA_OUT			1
@@ -237,7 +256,7 @@ extern "C" {
 #if (MI_API_ENABLE)
 #define CLOCK_SYS_CLOCK_HZ  	48000000
 #else
-#define CLOCK_SYS_CLOCK_HZ  	16000000
+#define CLOCK_SYS_CLOCK_HZ  	48000000
 #endif
 //////////////////Extern Crystal Type///////////////////////
 #define CRYSTAL_TYPE			XTAL_12M		//  extern 12M crystal
