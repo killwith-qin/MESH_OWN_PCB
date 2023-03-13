@@ -612,9 +612,14 @@ void cb_User_Init_info(void)
 void cb_User_Init_Hardware(void)
 {
 	static u8 Need_User_Init_HW = 0;
+	u8 temp;
 	if(Need_User_Init_HW == 0)
 	{
 		Need_User_Init_HW = 1;
+
+		temp = read_reg8(0x582) | BIT(3);
+		write_reg8(0x582,temp);
+
 	}
 
 }
@@ -664,11 +669,13 @@ enum Switch_Color_index
 */
 
 #define EVERY_SEND_COUNT 30
+ U32 Color_Count = 0;
+
 
 void User_Ctr_LED_Function(void)
 {
 	static u32 User_Send_LED_Signal_Tick = 0;
-	static U32 Color_Count = 0;
+	
 	int j;
 	U8 switch_Led_light;
 
@@ -776,6 +783,7 @@ if(Current_SW2812B_STATE != 0)
 }
 else
 {
+	Color_Count = 0;
     SW2812B_Supply_Disable();
 }
 
