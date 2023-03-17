@@ -182,7 +182,7 @@ extern "C" {
 #define PC2_INPUT_ENABLE		1
 #define PC3_INPUT_ENABLE		1
 #define	SW1_GPIO				GPIO_PC0
-#define	SW2_GPIO				GPIO_PC2
+#define	SW2_GPIO				GPIO_PC1
 #define	SW3_GPIO                GPIO_PC3
 
 #if 0 // must output 0, because it is keyboard array. pull down is not enough to output low level.

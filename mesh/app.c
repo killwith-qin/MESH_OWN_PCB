@@ -620,9 +620,9 @@ void cb_User_Init_Hardware(void)
 		temp = read_reg8(0x582) | BIT(3);
 		write_reg8(0x582,temp);
 
-		gpio_set_func(GPIO_PC2,AS_GPIO);
-	gpio_set_output_en(GPIO_PC2,0);
-	gpio_set_input_en(GPIO_PC2,1);
+		gpio_set_func(SW2_GPIO,AS_GPIO);
+	gpio_set_output_en(SW2_GPIO,0);
+	gpio_set_input_en(SW2_GPIO,1);
 	
 
 	}
