@@ -548,6 +548,20 @@ unsigned char Printf_Buf_QW[6] = {0x65,0x66,0x67,0x68,0x69,0x70};
 #define SW2_GPIO_ADDR    (0x580+((SW2_GPIO>>8)<<3)) //register GPIO input
 #define SW3_GPIO_ADDR    (0x580+((SW3_GPIO>>8)<<3)) //register GPIO input
 
+
+u8 SW_Switch_LED_STATE(u8 crrrent)
+{
+	if(crrrent != 0)
+	{
+
+
+
+	}
+
+return 0;
+}
+
+
 void cb_User_SW_Function(void)
 {
 	static u8 SW1_Last_State = 0;
@@ -559,6 +573,10 @@ void cb_User_SW_Function(void)
 	SW1_Current_State = ( read_reg8(SW1_GPIO_ADDR) & (SW1_GPIO & 0xFF) ); //gpio_read(SW1_GPIO);
 	SW2_Current_State = ( read_reg8(SW2_GPIO_ADDR) & (SW2_GPIO & 0xFF) );
     SW3_Current_State = ( read_reg8(SW3_GPIO_ADDR) & (SW3_GPIO & 0xFF) );
+
+	 
+
+
 	if(SW1_Current_State != SW1_Last_State)
 	{
 		SW1_Last_State = SW1_Current_State;
@@ -569,7 +587,18 @@ void cb_User_SW_Function(void)
 		else
 		{
 			LOG_USER_MSG_INFO(&SW1_Current_State, 1, "SW1 Pressed State: ", 0);
-		}
+            
+			if(Current_SW2812B_STATE != 0)
+            {
+			    access_cmd_onoff(0xffff, 0, G_OFF, CMD_NO_ACK, 0);
+                Current_SW2812B_STATE = 0;
+		    }
+			else
+			{
+				access_cmd_onoff(0xffff, 0, G_ON, CMD_NO_ACK, 0);
+				Current_SW2812B_STATE = 1;
+			}
+	    }
 	}
 	if(SW2_Current_State != SW2_Last_State)
 	{
