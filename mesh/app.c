@@ -192,6 +192,62 @@ _attribute_ram_code_ static void Send_One_Ctr_Signal(u32 One_Signal)   //0x00 XX
 	 
 }
 
+
+_attribute_ram_code_
+_attribute_no_inline_
+static void Sned_144bit_Signal(u8 *bit)
+{
+	int j;
+        u8 tmp_out_low  = read_reg8(SIGNAL_IO_REG_ADDR) & (~(LED_SIGAL_SEND_PIN & 0xff));
+	    u8 tmp_out_high = read_reg8(SIGNAL_IO_REG_ADDR) | (LED_SIGAL_SEND_PIN & 0xff);
+	/*! Make sure the following loop instruction starts at 4-byte alignment: (which is destination address of "tjne") */
+	// _ASM_NOP_;
+	for(j = 0;j<24*6;j++)
+	{
+		 if(bit[j]!=0)
+		 {
+            write_reg8(SIGNAL_IO_REG_ADDR,tmp_out_high);
+			CLOCK_DLY_10_CYC;CLOCK_DLY_10_CYC;
+			CLOCK_DLY_8_CYC;CLOCK_DLY_8_CYC;
+            write_reg8(SIGNAL_IO_REG_ADDR,tmp_out_low);
+			CLOCK_DLY_8_CYC;CLOCK_DLY_8_CYC;
+		 }
+		 else
+		 {
+            write_reg8(SIGNAL_IO_REG_ADDR,tmp_out_high);
+            CLOCK_DLY_8_CYC;CLOCK_DLY_8_CYC;
+			write_reg8(SIGNAL_IO_REG_ADDR,tmp_out_low);
+			CLOCK_DLY_10_CYC;CLOCK_DLY_10_CYC;
+			CLOCK_DLY_8_CYC;CLOCK_DLY_8_CYC;
+		 }
+	}
+}
+
+
+_attribute_ram_code_ static void Send_Constomer_Signal(u32 One_Signal[], u8 len)   //0x00 XX XX XX 24bit valid
+{
+	int i;
+	//volatile u32 pcTxReg = SIGNAL_IO_REG_ADDR;//register GPIO output
+	u8 bit[144] = {0};
+
+	for(i=0;i<24*6;i++)
+	{
+        bit[i] = ( (One_Signal[i/24]>>i) & 0x01)? 0x01 : 0x00;
+	}
+
+	/*! Minimize the time for interrupts to close and ensure timely
+	    response after interrupts occur. */
+	u8 r = 0;
+	r = irq_disable();
+	Sned_144bit_Signal(bit);
+	irq_restore(r);
+
+}
+
+
+
+
+
 #if MI_SWITCH_LPN_EN
 void mi_mesh_switch_sys_mode(u32 clk)
 {
@@ -658,6 +714,7 @@ void cb_User_Init_Hardware(void)
 
 }
 /*
+ * GREEN_RED_BULE
 		RED: #00FF00
 		ORAGE: #7DFF00
 		YELLOW: #FFFF00
@@ -665,6 +722,14 @@ void cb_User_Init_Hardware(void)
 		CYAN: #FF00FF
 		BULU: #0000FF
 		PURPLE: #00FFFF
+   RED:    00FF00
+   YELLOW: FFFF00
+   Pink:   C0FFCB
+   GREEN:  FF0000
+   PURPLE: 20A0F0\008080
+   BULU:   0000FF
+
+
 */
 
 
@@ -672,15 +737,16 @@ typedef enum RGB_Color
 {
 	RED    = 0x0000FF00,
 	ORAGE  = 0x007DFF00,
-	YELLOW = 0x00FFFF00,
-    GREEN  = 0x00FF0000,
+	YELLOW = 0x0000FFFF,
+    GREEN  = 0x000000FF,
     CYAN   = 0x00FF00FF,
-    BULU   = 0x000000FF,
-    PURPLE = 0x0000FFFF,
+    BULU   = 0x00FF0000,
+    PURPLE = 0x00080800,
+    PINK   = 0x00BCFF0C,
     DROWN  = 0x00000000
 }Seven_Color;
 
-U32 Ctr_Signal_Array[8] ={RED,ORAGE,YELLOW,GREEN,CYAN,BULU,PURPLE,DROWN};
+U32 Ctr_Signal_Array[6] ={RED,YELLOW,PINK,GREEN,PURPLE,BULU};
 
 /*
 enum Switch_Color_index
@@ -705,6 +771,7 @@ enum Switch_Color_index
 #define EVERY_SEND_COUNT 30
  U32 Color_Count = 0;
 
+#define SW2812B_SWITCH_TIME (1000*1000)
 
 void User_Ctr_LED_Function(void)
 {
@@ -716,10 +783,18 @@ void User_Ctr_LED_Function(void)
 
 		//gpio_toggle(GPIO_PB5);
 		//gpio_write(GPIO_PB5,1);
-    if( clock_time_exceed(User_Send_LED_Signal_Tick, 100*1000))
+    if( clock_time_exceed(User_Send_LED_Signal_Tick, SW2812B_SWITCH_TIME))
 	{
 		User_Send_LED_Signal_Tick = clock_time();
 		Color_Count++;
+		switch_Led_light = Color_Count%6;
+		for(j=0;j<EVERY_SEND_COUNT;j++)
+        {
+	        Send_One_Ctr_Signal(Ctr_Signal_Array[switch_Led_light]);
+        }
+
+
+		/*
 		switch_Led_light = Color_Count%30;
 
 			for(j=0;j<EVERY_SEND_COUNT;j++)
@@ -728,11 +803,11 @@ void User_Ctr_LED_Function(void)
 				{
 					Send_One_Ctr_Signal(RED);
 					Send_One_Ctr_Signal(YELLOW);
-					Send_One_Ctr_Signal(BULU);
-					Send_One_Ctr_Signal(CYAN);
-					Send_One_Ctr_Signal(PURPLE);
-					Send_One_Ctr_Signal(ORAGE);
+					Send_One_Ctr_Signal(PINK);
 					Send_One_Ctr_Signal(GREEN);
+					Send_One_Ctr_Signal(PURPLE);
+					Send_One_Ctr_Signal(BULU);
+					//Send_Constomer_Signal(Ctr_Signal_Array,6);
 				}
 				else
 				{
@@ -740,6 +815,29 @@ void User_Ctr_LED_Function(void)
 				}
 				
 			}
+			*/
+	/*
+		for(j=0;j<30;j++)
+					{
+						if(j==20)
+						{
+							Send_One_Ctr_Signal(RED);
+							Send_One_Ctr_Signal(YELLOW);
+							Send_One_Ctr_Signal(PINK);
+							Send_One_Ctr_Signal(GREEN);
+							Send_One_Ctr_Signal(PURPLE);
+							Send_One_Ctr_Signal(BULU);
+							//Send_Constomer_Signal(Ctr_Signal_Array,6);
+						}
+						else
+						{
+							Send_One_Ctr_Signal(DROWN);
+						}
+
+					}
+  */
+
+
 
 		/*
 		switch(switch_Led_light)
