@@ -179,6 +179,25 @@ int cb_vd_group_g_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
     return err;
 }
 
+int cb_vd_park_lock_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
+{
+int pub_flag = 0;
+    
+LOG_USER_MSG_INFO(par, 1, "Reach  to here ", 0);
+
+    PARK_LOCK_STATE = 1;
+	Park_Lock_Tick = clock_time();
+
+   
+	 
+    return pub_flag;
+
+}
+
+
+
+
+
 vd_group_g_func_t vd_group_g_func[] = {
     /* telink use sub op from 0x00 to 0x7f*/
     {VD_GROUP_G_OFF, vd_group_g_light_onoff, vd_light_tx_cmd_onoff_st},
@@ -958,7 +977,7 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
     CMD_NO_STR(VD_LPN_SENSOR_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_lpn_sensor_sts, STATUS_NONE),
     #endif
 #endif
-
+    CMD_NO_STR(PARK_LOCK_SET_NOACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_park_lock_set, STATUS_NONE),
     USER_MESH_CMD_VD_ARRAY
 };
 

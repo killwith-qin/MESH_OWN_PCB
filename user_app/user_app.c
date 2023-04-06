@@ -87,3 +87,8 @@ void SW2812B_Supply_Disable(void)
     gpio_write(SW2812B_PWR_ENABLE, false);
 }
 
+
+U8 PARK_LOCK_STATE = 0;
+
+u32  Park_Lock_Tick = 0;
+

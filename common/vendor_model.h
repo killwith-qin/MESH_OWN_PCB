@@ -98,7 +98,8 @@
 #define VD_GROUP_G_STATUS		        0xC4
         #endif
     #endif
-    
+#define PARK_LOCK_SET_NOACK             0xF1
+
     #if FAST_PROVISION_ENABLE
 #define VD_MESH_RESET_NETWORK			0xC5
 #define VD_MESH_ADDR_GET				0xC6

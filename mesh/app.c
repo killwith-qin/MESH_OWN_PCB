@@ -579,7 +579,7 @@ void test_simu_io_user_define_proc()
 
 
 #define RUNNING_REPORT_TIME    (5000 * 1000)  //2000MS
-#define LED_YELLOW_FLASH_TIME  (500 * 1000)  //500MS
+#define LED_YELLOW_FLASH_TIME  (5000 * 1000)  //500MS
 
 void User_General_Running_Function(void)
 {
@@ -895,6 +895,49 @@ void User_Ctr_LED_Function(void)
 }
 
 
+#define USER_PARK_LOCK_CYCLE_TIME  (1000 * 1000)  //1S
+
+u8 Park_Lock_par=0;
+
+void cb_Parking_Lock_Function(void)
+{
+	/*
+    static u32 User_Park_Lock_Start_Tick = 0;
+
+	int Send_Success_Flag = 0;
+
+	if( clock_time_exceed(User_Park_Lock_Start_Tick, USER_PARK_LOCK_CYCLE_TIME))
+	{
+		User_Park_Lock_Start_Tick = clock_time();
+		if(Park_Lock_par != 1)
+		{
+			Park_Lock_par = 1;
+		}
+		else
+		{
+			Park_Lock_par = 0;
+		}
+        Send_Success_Flag = mesh_tx_cmd2normal_primary(PARK_LOCK_SET_NOACK,(u8 *)&Park_Lock_par,1,0xFFFF, 0);
+		LOG_USER_MSG_INFO((u8 *)&Send_Success_Flag, sizeof(Send_Success_Flag), "Parking Lock Info send", 0);
+    }
+*/
+	if(PARK_LOCK_STATE != 0)
+	{
+		gpio_write(PCB_STAT_LED,1);
+	}
+	else
+	{
+		gpio_write(PCB_STAT_LED,0);
+	}
+
+	if( (PARK_LOCK_STATE == 1) && (clock_time_exceed(Park_Lock_Tick, USER_PARK_LOCK_CYCLE_TIME)) )
+	{
+
+		PARK_LOCK_STATE = 0;
+	}
+}
+
+
 
 void cb_My_Main_Loop_function(void)
 {
@@ -919,7 +962,7 @@ else
     SW2812B_Supply_Disable();
 }
 
-	
+cb_Parking_Lock_Function();
 }
 
 
