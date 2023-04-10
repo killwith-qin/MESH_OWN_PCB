@@ -51,7 +51,7 @@ void SW2812B_Supply_Disable(void);
 extern u8  Last_SW2812B_STATE;
 extern u8  Current_SW2812B_STATE;
 
-
+extern u8 Mesh_Board_Success_Flag;
 extern u8 PARK_LOCK_STATE;
 extern u32  Park_Lock_Tick;
 /**

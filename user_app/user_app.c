@@ -87,6 +87,7 @@ void SW2812B_Supply_Disable(void)
     gpio_write(SW2812B_PWR_ENABLE, false);
 }
 
+u8 Mesh_Board_Success_Flag=0;
 
 U8 PARK_LOCK_STATE = 0;
 

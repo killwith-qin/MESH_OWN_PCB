@@ -921,20 +921,24 @@ void cb_Parking_Lock_Function(void)
 		LOG_USER_MSG_INFO((u8 *)&Send_Success_Flag, sizeof(Send_Success_Flag), "Parking Lock Info send", 0);
     }
 */
-	if(PARK_LOCK_STATE != 0)
-	{
-		gpio_write(PCB_STAT_LED,1);
-	}
-	else
-	{
-		gpio_write(PCB_STAT_LED,0);
-	}
+	Mesh_Board_Success_Flag = is_provision_success();
+   if(Mesh_Board_Success_Flag !=0)
+   {
+        if(PARK_LOCK_STATE != 0)
+        {
+			gpio_write(PCB_STAT_LED,1);
+		}
+		else
+		{
+			gpio_write(PCB_STAT_LED,0);
+		}
 
-	if( (PARK_LOCK_STATE == 1) && (clock_time_exceed(Park_Lock_Tick, USER_PARK_LOCK_CYCLE_TIME)) )
-	{
+		if( (PARK_LOCK_STATE == 1) && (clock_time_exceed(Park_Lock_Tick, USER_PARK_LOCK_CYCLE_TIME)) )
+		{
 
-		PARK_LOCK_STATE = 0;
-	}
+			PARK_LOCK_STATE = 0;
+		}
+   }
 }
 
 
@@ -951,18 +955,21 @@ void cb_My_Main_Loop_function(void)
 	cb_User_SW_Function();
 	
 	//Control LED
-if(Current_SW2812B_STATE != 0)
-{
+    if(Current_SW2812B_STATE != 0)
+    {
 	SW2812B_Supply_Enable();
 	User_Ctr_LED_Function();
-}
-else
-{
+    }
+    else
+    {
 	Color_Count = 0;
     SW2812B_Supply_Disable();
-}
+    }
 
-cb_Parking_Lock_Function();
+
+    cb_Parking_Lock_Function();
+
+
 }
 
 
