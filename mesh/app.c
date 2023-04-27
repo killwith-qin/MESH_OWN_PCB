@@ -917,7 +917,7 @@ void cb_Parking_Lock_Function(void)
 		{
 			Park_Lock_par = 0;
 		}
-        Send_Success_Flag = mesh_tx_cmd2normal_primary(PARK_LOCK_SET_NOACK,(u8 *)&Park_Lock_par,1,0xFFFF, 0);
+        Send_Success_Flag = mesh_tx_cmd2normal_primary(PARK_LOCK_STATUS,(u8 *)&Park_Lock_par,1,0xFFFF, 0);
 		LOG_USER_MSG_INFO((u8 *)&Send_Success_Flag, sizeof(Send_Success_Flag), "Parking Lock Info send", 0);
     }
 */

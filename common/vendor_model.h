@@ -99,6 +99,7 @@
         #endif
     #endif
 #define PARK_LOCK_SET_NOACK             0xF1
+#define PARK_LOCK_STATUS                0xF2
 
     #if FAST_PROVISION_ENABLE
 #define VD_MESH_RESET_NETWORK			0xC5

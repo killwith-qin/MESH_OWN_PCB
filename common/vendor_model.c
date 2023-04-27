@@ -183,16 +183,18 @@ int cb_vd_park_lock_set(u8 *par, int par_len, mesh_cb_fun_par_t *cb_par)
 {
 int pub_flag = 0;
     
-LOG_USER_MSG_INFO(par, 1, "Reach  to here ", 0);
 
     PARK_LOCK_STATE = 1;
 	Park_Lock_Tick = clock_time();
 
+    LOG_USER_MSG_INFO((u8 *)&Park_Lock_Tick,4, "Receive time is: ", 0);
    
-	 
+	mesh_tx_cmd2normal_primary(PARK_LOCK_STATUS,(u8 *)&PARK_LOCK_STATE,1,0xFFFF, 0);
     return pub_flag;
 
 }
+
+#define cb_vd_park_lock_status         (0)
 
 
 
@@ -978,6 +980,7 @@ mesh_cmd_sig_func_t mesh_cmd_vd_func[] = {
     #endif
 #endif
     CMD_NO_STR(PARK_LOCK_SET_NOACK, 0, VENDOR_MD_LIGHT_C, VENDOR_MD_LIGHT_S, cb_vd_park_lock_set, STATUS_NONE),
+	CMD_NO_STR(PARK_LOCK_STATUS, 1, VENDOR_MD_LIGHT_S, VENDOR_MD_LIGHT_C, cb_vd_park_lock_status, STATUS_NONE),
     USER_MESH_CMD_VD_ARRAY
 };
 
